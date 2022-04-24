@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.JcPurchaseAgreeStateMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcPurchaseAgreeState">
+            <result column="id" property="id" />
+	        <result column="pro_purchase_type" property="proPurchaseType" />
+	        <result column="gov_purchase_num" property="govPurchaseNum" />
+	        <result column="pro_name" property="proName" />
+	        <result column="pro_units" property="proUnits" />
+	        <result column="handle_department" property="handleDepartment" />
+	        <result column="agree_all" property="agreeAll" />
+	        <result column="already_agree" property="alreadyAgree" />
+	        <result column="wait_agree" property="waitAgree" />
+	        <result column="pay_batch" property="payBatch" />
+	        <result column="batch_money" property="batchMoney" />
+	        <result column="create_time" property="createTime" />
+	        <result column="count_year" property="countYear" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.id,
+         t1.pro_purchase_type,
+         t1.gov_purchase_num,
+         t1.pro_name,
+         t1.pro_units,
+         t1.handle_department,
+         t1.agree_all,
+         t1.already_agree,
+         t1.wait_agree,
+         t1.pay_batch,
+         t1.batch_money,
+         t1.create_time,
+         t1.count_year,
+        </sql> 
+
+</mapper>

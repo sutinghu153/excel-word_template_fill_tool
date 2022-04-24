@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.JcOpEvaluateWorkingMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcOpEvaluateWorking">
+            <result column="key_dig_num_gather" property="keyDigNumGather" />
+	        <result column="key_type_code" property="keyTypeCode" />
+	        <result column="window_service" property="windowService" />
+	        <result column="window_service_note" property="windowServiceNote" />
+	        <result column="op_service" property="opService" />
+	        <result column="op_service_note" property="opServiceNote" />
+	        <result column="kance" property="kance" />
+	        <result column="kance_note" property="kanceNote" />
+	        <result column="info_center" property="infoCenter" />
+	        <result column="info_center_note" property="infoCenterNote" />
+	        <result column="opinion" property="opinion" />
+	        <result column="evaluate_time" property="evaluateTime" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.key_dig_num_gather,
+         t1.key_type_code,
+         t1.window_service,
+         t1.window_service_note,
+         t1.op_service,
+         t1.op_service_note,
+         t1.kance,
+         t1.kance_note,
+         t1.info_center,
+         t1.info_center_note,
+         t1.opinion,
+         t1.evaluate_time,
+        </sql>
+	<select id="getTableDetails" resultType="java.util.Map">
+	   ${sql}
+	</select>
+</mapper>

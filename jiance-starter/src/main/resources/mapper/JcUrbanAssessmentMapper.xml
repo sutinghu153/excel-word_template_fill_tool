@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.SupUrbanAssessmentMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcUrbanAssessment">
+            <result column="city_assess_id" property="cityAssessId" />
+	        <result column="assess_indicative" property="assessIndicative" />
+	        <result column="assess_project" property="assessProject" />
+	        <result column="indicative_nature" property="indicativeNature" />
+	        <result column="score" property="score" />
+	        <result column="inspection_points" property="inspectionPoints" />
+	        <result column="duty_office_depart" property="dutyOfficeDepart" />
+	        <result column="match_office_depart" property="matchOfficeDepart" />
+	        <result column="duty_leader" property="dutyLeader" />
+	        <result column="assess_performance" property="assessPerformance" />
+	        <result column="percentage" property="percentage" />
+	        <result column="update_time" property="updateTime" />
+	        <result column="sup_num" property="supNum" />
+	        <result column="sup_id" property="supId" />
+	        <result column="create_user" property="createUser" />
+	        <result column="create_time" property="createTime" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.city_assess_id,
+         t1.assess_indicative,
+         t1.assess_project,
+         t1.indicative_nature,
+         t1.score,
+         t1.inspection_points,
+         t1.duty_office_depart,
+         t1.match_office_depart,
+         t1.duty_leader,
+         t1.assess_performance,
+         t1.percentage,
+         t1.update_time,
+         t1.sup_num,
+         t1.sup_id,
+         t1.create_user,
+         t1.create_time,
+        </sql> 
+
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.SupOperationMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcOperation">
+            <result column="action_id" property="actionId" />
+	        <result column="action_fields" property="actionFields" />
+	        <result column="action_table" property="actionTable" />
+	        <result column="action_operation" property="actionOperation" />
+			<result column="action_desc" property="actionDesc" />
+			<result column="action_result" property="actionResult" />
+			<result column="action_sign" property="actionSign" />
+		</resultMap>
+
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.action_id,
+         t1.action_fields,
+         t1.action_table,
+         t1.action_operation,
+         t1.action_desc,
+         t1.action_result,
+		 t1.action_sign
+        </sql> 
+
+</mapper>

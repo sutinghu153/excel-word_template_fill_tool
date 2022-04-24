@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.SupFieldOfTableDetailMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcFieldOfTableDetails">
+            <result column="field_id" property="fieldId" />
+	        <result column="table_name" property="tableName" />
+	        <result column="count_id" property="countId" />
+	        <result column="field_name" property="fieldName" />
+	        <result column="field_meaning" property="fieldMeaning" />
+	        <result column="field_show_state" property="fieldShowState" />
+	        <result column="create_time" property="createTime" />
+	        <result column="update_time" property="updateTime" />
+			<result column="sort_num" property="sortNum" />
+		</resultMap>
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.field_id,
+         t1.table_name,
+         t1.count_id,
+         t1.field_name,
+         t1.field_meaning,
+         t1.field_show_state,
+         t1.create_time,
+         t1.update_time,
+        </sql>
+	<insert id="insertByMap" parameterType="java.util.Map">
+		insert into "${tableName}"
+		(
+		<foreach collection="columnMap" item="value" index="key" separator=",">
+			${key}
+		</foreach>
+		)
+		values
+		<foreach collection="mapList" item="columnMap" separator=",">
+			(
+			<foreach collection="columnMap" item="value" index="key" separator=",">
+				#{value}
+			</foreach>
+			)
+		</foreach>
+	</insert>
+
+	<update id="updateByMap">
+		<foreach collection="mapList" item="map"  separator=";">
+			<foreach collection="map" item="value" index="key" separator=",">
+				update ${tableName} set ${resultName} = #{value}   where ${id} = #{key}
+			</foreach>
+		</foreach>
+	</update>
+
+	<select id="getTableDetails" resultType="java.util.Map">
+		${sql}
+	</select>
+
+	<select id="getTemplateOrdinary" resultType="java.util.Map">
+		${sql}
+	</select>
+
+	<select id="getTemplateList" resultType="java.util.Map">
+		${sql}
+	</select>
+
+
+</mapper>

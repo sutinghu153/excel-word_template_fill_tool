@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.JcMajorProjectsMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcMajorProjects">
+            <result column="id" property="id" />
+	        <result column="key_type_code" property="keyTypeCode" />
+	        <result column="key_dig_num_gather" property="keyDigNumGather" />
+	        <result column="pro_name" property="proName" />
+	        <result column="pro_units" property="proUnits" />
+	        <result column="build_quality" property="buildQuality" />
+	        <result column="creat_time" property="creatTime" />
+	        <result column="area" property="area" />
+	        <result column="progress" property="progress" />
+	        <result column="progress_time" property="progressTime" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.id,
+         t1.key_type_code,
+         t1.key_dig_num_gather,
+         t1.pro_name,
+         t1.pro_units,
+         t1.build_quality,
+         t1.creat_time,
+         t1.area,
+         t1.progress,
+         t1.progress_time
+        </sql>
+	<select id="getDetailList" resultType="com.hnup.osmp.jiance.model.dto.monitor.OpMonitorDTO">
+		SELECT * FROM (
+		SELECT
+		t.KEY_DIG_NUM_GATHER AS keyDigNumGather,
+		t.CREATE_TIME as createTime,
+		t.OP_STATE as state,
+		t.FINISH_TIME AS finishTime,
+		m.PRJ_COMPANY AS prjCompany,
+		m.prj_name as prjName,
+		m.bz as opRemark,
+		u.user_id AS userId,
+		(CASE when t.register_user_id is null then null else d.dept_name end) as deptName,
+		u.USER_NAME as userName,
+		m.lxr as fdUser,
+		m.bjylxdh as fdUserPhone,
+		q.THEORY_TOTAL_TIME as theoryTime,
+		q.SPENT_TOTAL_TIME as spentTime
+		FROM
+		OP_ENTITY t
+		LEFT JOIN op_public_field_data_cache m ON t.KEY_DIG_NUM_GATHER = m.KEY_DIG_NUM_GATHER
+		LEFT JOIN op_entity_bpm q on q.KEY_DIG_NUM_GATHER = t.KEY_DIG_NUM_GATHER
+		LEFT JOIN user_info u on u.user_id = t.register_user_id
+		LEFT JOIN USER_DEPT d on d.dept_id = u.dept_id
+		WHERE
+		t.DELETE_TIME IS NULL and t.key_num_gather IS NOT NULL
+		) as opMonitors
+		WHERE 1=1
+		<if test="startTime != null and endTime != null">
+			AND createTime BETWEEN  #{startTime} AND #{endTime}
+		</if>
+		<if test="deptName != null ">
+			AND deptName = #{deptName}
+		</if>
+	</select>
+
+</mapper>

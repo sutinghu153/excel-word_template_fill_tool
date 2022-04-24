@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.JcMajorPlanningPermissionMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcMajorPlanningPermission">
+            <result column="id" property="id" />
+	        <result column="key_number_gather" property="keyNumberGather" />
+	        <result column="region" property="region" />
+	        <result column="xkzh" property="xkzh" />
+	        <result column="pro_units" property="proUnits" />
+	        <result column="pro_number" property="proNumber" />
+	        <result column="pro_site" property="proSite" />
+	        <result column="area" property="area" />
+	        <result column="land_type" property="landType" />
+	        <result column="prove_time" property="proveTime" />
+	        <result column="key_type_code" property="keyTypeCode" />
+	        <result column="key_dig_num_gather" property="keyDigNumGather" />
+			<result column="type" property="type" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.id,
+         t1.key_number_gather,
+         t1.region,
+         t1.xkzh,
+         t1.pro_units,
+         t1.pro_number,
+         t1.pro_site,
+         t1.area,
+         t1.land_type,
+         t1.prove_time,
+         t1.key_type_code,
+         t1.key_dig_num_gather,
+        </sql> 
+
+</mapper>

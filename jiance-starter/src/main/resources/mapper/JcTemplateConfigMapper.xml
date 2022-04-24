@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.SupTemplateConfigMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcTemplateConfig">
+            <result column="templet_id" property="templetId" />
+	        <result column="templet_name" property="templetName" />
+	        <result column="templet" property="templet" />
+	        <result column="create_time" property="createTime" />
+	        <result column="update_time" property="updateTime" />
+	        <result column="creater" property="creater" />
+			<result column="template_sql" property="templateSql" />
+			<result column="model_name" property="modelName" />
+			<result column="belong_id" property="belongId" />
+			<result column="file_type" property="fileType" />
+			<result column="word_or_excel" property="wordOrExcel" />
+		</resultMap>
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.templet_id,
+         t1.templet_name,
+         t1.templet,
+         t1.create_time,
+         t1.update_time,
+         t1.creater,
+        </sql> 
+
+
+</mapper>

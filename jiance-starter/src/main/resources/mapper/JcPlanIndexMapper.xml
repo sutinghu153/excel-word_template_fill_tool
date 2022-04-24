@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.SupPlanIndexMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcPlanIndex">
+            <result column="id" property="id" />
+	        <result column="class_type" property="classType" />
+	        <result column="index_name" property="indexName" />
+	        <result column="unit" property="unit" />
+	        <result column="near_value" property="nearValue" />
+	        <result column="far_value" property="farValue" />
+	        <result column="near_time" property="nearTime" />
+	        <result column="far_time" property="farTime" />
+	        <result column="monitor_value" property="monitorValue" />
+	        <result column="basic_value" property="basicValue" />
+	        <result column="monitor_time" property="monitorTime" />
+	        <result column="basic_time" property="basicTime" />
+			<result column="bound_value" property="boundValue" />
+		</resultMap>
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.id,
+         t1.class_type,
+         t1.index_name,
+         t1.unit,
+         t1.near_value,
+         t1.far_value,
+         t1.near_time,
+         t1.far_time,
+         t1.monitor_value,
+         t1.basic_value,
+         t1.monitor_time,
+         t1.basic_time,
+        </sql>
+	<select id="getDate" resultType="com.hnup.osmp.jiance.model.dto.monitor.MeetingDTO">
+			SELECT
+			  id,
+			  years,
+			  title,
+			  meet_type_id as meetTypeId,
+			  meet_type as  meetType,
+			  meet_unit_id as meetUnitId,
+			  meet_unit_name as  meetUnitName,
+			  meet_day as  meetDay,
+			  start_time as startTime,
+			  end_time as endTime,
+			  room_id as  roomId,
+			  room_name as roomName,
+			  state,
+			  apply_time as applyTime,
+			  applicant,
+			  applicant_name as  applicantName,
+			  organizer_id as  organizerId,
+			  meeting.dept_id as deptId,
+			  user_dept.dept_name as deptName,
+			  recorder_id as recorderId,
+			  minutes_time as minutesTime,
+			  minutes_state as minutesState,
+			  recorder,
+			  host_name as hostName,
+			  approve_id as approveId,
+			  approve_name as approveName,
+			  approve_time as approveTime,
+			  approve_opinion as approveOpinion,
+			  contact_person_id as contactPersonId,
+			  contact_person as contactPerson,
+			  contact_phone as contactPhone,
+			  check_id as checkId,
+			  check_name as checkName,
+			  check_state as checkState,
+			  participant,
+			  quantity,
+			  real_Quantity as realQuantity,
+			  applicant_type as applicantType,
+			  type,
+			  meeting.remark
+			FROM meeting
+			LEFT JOIN user_dept ON meeting.dept_id = user_dept.dept_id
+			WHERE meeting.start_time is not null and meeting.dept_id is not null and meeting.organizer_id is not null
+	</select>
+	<select id="getMajorProjectList" resultType="com.hnup.osmp.jiance.model.dto.MajorProjectDTO">
+		SELECT
+			T.key_dig_num_gather as keyDigNumGather,
+			T.key_type_code as keyTypeCode,
+			M.prj_num_gather as prjNumGather,
+			M.prj_name as prjName,
+			M.prj_year as prjYear,
+			M.prj_location as prjLocation,
+			M.prj_state as prjState
+		FROM
+			op_project_num_relation_ship
+			T LEFT JOIN op_project_num M ON T.prj_num_gather = M.prj_num_gather
+		WHERE
+			M.prj_num_gather is not null and M.is_great is not null and M.is_great = '是'
+	</select>
+	<select id="countHandle" resultType="java.util.Map">
+		SELECT
+			COUNT(*) AS acceptNum,
+			COALESCE(SUM ( CASE WHEN states = 5 THEN 1 ELSE 0 END ),0) AS finishNum,
+			(case when acceptNum != 0 then round(finishNum/acceptNum :: NUMERIC, 2)*100 else 0 end) as finishRate,
+			(case when acceptNum != 0 then round((COALESCE(SUM ( CASE WHEN (states = 5 and (flags <![CDATA[ != ]]> 3 or flags is null ))THEN 1 ELSE 0 END ),0))/acceptNum :: NUMERIC, 2)*100 else 0 end) as onTimeRate
+		FROM
+			(
+			SELECT
+				to_char( p.create_time, 'yyyy' ) AS yeartime,
+				p.key_dig_num_gather AS keyDigNumGather,
+				p.op_state AS states,
+				m.light_flag as flags
+			FROM
+				op_entity p
+			LEFT JOIN op_entity_bpm m
+			on p.key_dig_num_gather = m.key_dig_num_gather
+			WHERE
+				p.create_time IS NOT NULL
+				AND p.key_dig_num_gather IS NOT NULL
+				AND p.delete_time IS NULL
+			) T
+		WHERE
+			T.yeartime = ( SELECT to_char( CURRENT_DATE, 'yyyy' ))
+	</select>
+	<select id="countTrend" resultType="java.util.Map">
+		SELECT
+			COUNT(*) AS acceptNum,
+			COALESCE(SUM ( CASE WHEN states = 5 THEN 1 ELSE 0 END ),0) AS finishNum,
+			yeartime
+		FROM
+			(
+				SELECT
+					to_char( create_time, 'yyyy-MM' ) AS yeartime,
+					key_dig_num_gather AS keyDigNumGather,
+					op_state AS states
+				FROM
+					op_entity
+				WHERE
+					create_time IS NOT NULL
+					AND create_time <![CDATA[ > ]]> ( SELECT now() - INTERVAL '6 month' )
+					AND key_dig_num_gather IS NOT NULL
+					AND delete_time IS NULL
+			) T
+		GROUP BY
+			T.yeartime
+		ORDER BY
+			yeartime
+	</select>
+	<select id="countDepartmentBjlTopFive" resultType="java.util.Map">
+		SELECT
+			finishNum,
+			departid,
+			k.dept_name as departname
+		FROM (
+			SELECT
+				COALESCE(SUM ( CASE WHEN states = 5 THEN 1 ELSE 0 END ),0) AS finishNum,
+				T.departid
+			FROM (
+					SELECT
+						p.key_dig_num_gather AS keyDigNumGather,
+						p.op_state AS states,
+						m.light_flag as flags,
+						t.op_pri_depart_num as departid
+					FROM
+						op_entity p
+					LEFT JOIN op_entity_bpm m
+					on p.key_dig_num_gather = m.key_dig_num_gather
+					LEFT JOIN op_pri_man t
+					on p.key_dig_num_gather = t.key_dig_num_gather
+					WHERE
+						p.create_time IS NOT NULL
+						AND p.key_dig_num_gather IS NOT NULL
+						AND p.delete_time IS NULL
+			) T
+			WHERE T.departId is not null
+				GROUP BY T.departid
+
+		)M
+		LEFT JOIN user_dept k
+		on M.departid = k.dept_id
+		ORDER BY finishNum DESC LIMIT 5
+	</select>
+	<select id="countDepartmentZdlTopFive" resultType="java.util.Map">
+		SELECT
+			onTimeRate,
+			departid,
+			k.dept_name as departname
+		FROM (
+			SELECT
+					COUNT(*) AS acceptNum,
+					(case when acceptNum != 0 then round((COALESCE(SUM ( CASE WHEN (states = 5 and (flags != 3 or flags is null ))THEN 1 ELSE 0 END ),0))/acceptNum :: NUMERIC, 2)*100 else 0 end) as onTimeRate,
+				T.departid
+			FROM (
+					SELECT
+						p.key_dig_num_gather AS keyDigNumGather,
+						p.op_state AS states,
+						m.light_flag as flags,
+						t.op_pri_depart_num as departid
+					FROM
+						op_entity p
+					LEFT JOIN op_entity_bpm m
+					on p.key_dig_num_gather = m.key_dig_num_gather
+					LEFT JOIN op_pri_man t
+					on p.key_dig_num_gather = t.key_dig_num_gather
+					WHERE
+						p.create_time IS NOT NULL
+						AND p.key_dig_num_gather IS NOT NULL
+						AND p.delete_time IS NULL
+			) T
+			WHERE T.departId is not null
+				GROUP BY T.departid
+
+		)M
+		LEFT JOIN user_dept k
+		on M.departid = k.dept_id
+		ORDER BY onTimeRate DESC LIMIT 5
+	</select>
+	<select id="countRegionAccept" resultType="java.util.Map">
+		SELECT szq,acceptNum FROM (
+			SELECT
+				szq,
+				COUNT(keyDigNumGather) AS acceptNum
+			FROM (
+				SELECT
+					t.op_state as states,
+					t.key_dig_num_gather AS keyDigNumGather,
+					m.szq as szq
+				FROM
+					op_entity t
+				LEFT JOIN op_public_field_data_cache m
+				ON t.key_dig_num_gather = m.key_dig_num_gather
+				WHERE
+					t.create_time IS NOT NULL
+					AND t.key_dig_num_gather IS NOT NULL
+					AND t.delete_time IS NULL
+					AND m.szq is not null
+			)	T GROUP BY szq
+		)M ORDER BY acceptNum DESC LIMIT 5
+	</select>
+	<select id="countRegionFinish" resultType="java.util.Map">
+		SELECT szq,finishNum FROM (
+			SELECT
+				szq,
+				COALESCE(SUM ( CASE WHEN states = 5 THEN 1 ELSE 0 END ),0) AS finishNum
+			FROM (
+				SELECT
+					t.op_state as states,
+					t.key_dig_num_gather AS keyDigNumGather,
+					m.szq as szq
+				FROM
+					op_entity t
+				LEFT JOIN op_public_field_data_cache m
+				ON t.key_dig_num_gather = m.key_dig_num_gather
+				WHERE
+					t.create_time IS NOT NULL
+					AND t.key_dig_num_gather IS NOT NULL
+					AND t.delete_time IS NULL
+					AND m.szq is not null
+			)	T GROUP BY szq
+		)M ORDER BY finishNum DESC LIMIT 5
+	</select>
+	<select id="countMapData" resultType="java.util.Map">
+		SELECT szq,acceptNum,finishNum,onTimeRate FROM (
+			SELECT
+				szq,
+				COUNT(*) AS acceptNum,
+				COALESCE(SUM ( CASE WHEN states = 5 THEN 1 ELSE 0 END ),0) AS finishNum,
+				(case when acceptNum != 0 then round((COALESCE(SUM ( CASE WHEN (states = 5 and (flags != 3 or flags is null ))THEN 1 ELSE 0 END ),0))/acceptNum :: NUMERIC, 2)*100 else 0 end) as onTimeRate
+			FROM (
+				SELECT
+					t.op_state as states,
+					t.key_dig_num_gather AS keyDigNumGather,
+					m.szq as szq,
+					k.light_flag as flags
+				FROM
+					op_entity t
+				LEFT JOIN op_public_field_data_cache m
+				ON t.key_dig_num_gather = m.key_dig_num_gather
+				LEFT JOIN op_entity_bpm k
+				on t.key_dig_num_gather = k.key_dig_num_gather
+				WHERE
+					t.create_time IS NOT NULL
+					AND t.key_dig_num_gather IS NOT NULL
+					AND t.delete_time IS NULL
+					AND m.szq is not null
+			)	T GROUP BY szq
+		)M ORDER BY finishNum DESC LIMIT 8
+	</select>
+
+</mapper>

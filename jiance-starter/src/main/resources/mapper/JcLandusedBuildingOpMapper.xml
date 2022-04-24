@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.JcLandusedBuildingOpMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcLandusedBuildingOp">
+            <result column="id" property="id" />
+	        <result column="pro_name" property="proName" />
+	        <result column="pro_units" property="proUnits" />
+	        <result column="region_level1" property="regionLevel1" />
+	        <result column="region_level2" property="regionLevel2" />
+	        <result column="state_owned_type" property="stateOwnedType" />
+	        <result column="year" property="year" />
+	        <result column="landused_building" property="landusedBuilding" />
+	        <result column="agricultural_land" property="agriculturalLand" />
+	        <result column="untaking_land" property="untakingLand" />
+
+			<result column="cultivated_land" property="cultivatedLand" />
+			<result column="garden_land" property="gardenLand" />
+			<result column="forset_land" property="forsetLand" />
+			<result column="grass_land" property="grassLand" />
+			<result column="other_land" property="otherLand" />
+
+		</resultMap>
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.id,
+         t1.pro_name,
+         t1.pro_units,
+         t1.region_level1,
+         t1.region_level2,
+         t1.region_area,
+         t1.state_owned,
+         t1.collective_ownership,
+         t1.year,
+         t1.increased_area,
+         t1.landused_building,
+         t1.agricultural_land,
+         t1.untaking_land,
+         t1.op_landused_building,
+        </sql> 
+
+</mapper>

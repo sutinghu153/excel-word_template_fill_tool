@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.driver.DriverStoreDataMapper">
+
+	<!--统计公文数据-->
+	<select id="statisDoc" resultType="com.hnup.osmp.jiance.repository.entity.driver.DriverStoreDoc">
+		SELECT "公文类型" as type, "登记数量" as register_quantity,
+		       "办结数量" as finish_quantity, "平均办结周期(小时)" as avg_hours,"正点率" as on_time_rate,
+		  		#{year} as year, 1 as unit, '长沙市自然资源和规划局' as unit_name, now() as create_time
+		FROM (
+				 SELECT doc_entity.script_type AS "公文类型",
+						COUNT(1) AS "登记数量",
+						SUM(CASE
+								WHEN doc_entity.op_state = 5 AND doc_entity.finish_time IS NOT NULL THEN
+											date_part('day', doc_entity.finish_time - doc_entity.create_time) *
+											24 * 60 +
+											date_part('minute', doc_entity.finish_time - doc_entity.create_time)
+								ELSE 0 END
+							)                                                    AS "办结总周期(分钟)",
+						SUM(CASE WHEN doc_entity.op_state = 5 THEN 1 ELSE 0 END) AS "办结数量",
+						SUM(CASE
+								WHEN doc_entity.op_state = 5 AND doc_entity_bpm.light_flag = 3 THEN 1
+								ELSE 0 END)                                      AS "办结超时数量",
+						(case
+							 when "办结数量" != 0 then round(("办结超时数量" / "办结数量") :: NUMERIC, 2)
+							 else 0 end)                                         as "正点率",
+						(case
+							 when "办结数量" != 0 then round(("办结总周期(分钟)" / 60 / "办结数量") :: NUMERIC, 2)
+							 else 0 end)                                         as "平均办结周期(小时)"
+				 FROM doc_entity
+						  LEFT JOIN doc_entity_bpm
+									ON doc_entity.key_dig_num_gather = doc_entity_bpm.key_dig_num_gather
+				 WHERE doc_entity.key_num_gather IS NOT NULL
+				   AND cast(to_char( create_time, 'YYYY' ) as integer) = #{year}
+				   AND doc_entity.script_type in (1, 2)
+				 GROUP BY doc_entity.script_type
+		) A
+	</select>
+
+	<!--统计督办数据-->
+	<select id="statisSuppervise" resultType="com.hnup.osmp.jiance.repository.entity.driver.DriverStoreSupervise">
+		SELECT "登记" AS register_quantity, "办结" AS finish_quantity, 0 AS onTimeRate,
+			   #{year} as year, 1 as unit, '长沙市自然资源和规划局' as unit_name, now() as create_time
+		FROM (
+				 SELECT coalesce(sum(case when T.del = 'n' then 1 else 0 end), 0)                   as "登记",
+						coalesce(sum(case when T.del = 'n' and T1.status = 0 then 1 else 0 end), 0) as "办结"
+				 FROM supervise T,
+					  supervise_process_log T1
+				 WHERE T.ID = T1.sup_id
+					AND cast(to_char( T.start_time, 'YYYY' ) as integer) = #{year}
+			 ) A
+	</select>
+
+	<select id="staisMeeting" resultType="com.hnup.osmp.jiance.repository.entity.driver.DriverStoreMeeting">
+		select count(1) as quantity, #{year} as year, 1 as unit, '长沙市自然资源和规划局' as unit_name, now() as create_time
+		from meeting where cast(to_char(apply_time, 'YYYY' ) as integer) = #{year}
+	</select>
+
+	<select id="statisOp" resultType="com.hnup.osmp.jiance.repository.entity.driver.DriverStoreOp">
+		select "办结" as finish_quantity, "登记" as register_quantity, "办结率" as on_time_rate,
+			   #{year} as year, 1 as unit, '长沙市自然资源和规划局' as unit_name, now() as create_time
+		from (
+				 select sum(case when op_entity.op_state = 5 then 1 else 0 end) as "办结",
+						count(1)                                                as "登记",
+						sum(case
+								when op_entity.op_state = 5 and op_entity_bpm.light_flag = 3 then 1
+								else 0 end)                                     as "超期",
+						(case
+							 when "登记" != 0 then round(("办结" / "登记" :: NUMERIC), 2)
+							 else 0 end)                                         as "办结率"
+				 from op_entity
+						  left join op_entity_bpm
+									on op_entity.key_dig_num_gather = op_entity_bpm.key_dig_num_gather
+				 WHERE op_entity.key_num_gather IS NOT NULL
+					AND cast(to_char(create_time, 'YYYY' ) as integer) = #{year}
+			 ) a
+	</select>
+
+	<select id="statisOpRank" resultType="com.hnup.osmp.jiance.repository.entity.driver.DriverStoreOpRank">
+		select a.dept_id, b.dept_name, "接件数" as quantity, ROW_NUMBER() OVER() as rank_no,
+		#{year} as year, 1 as unit, '长沙市自然资源和规划局' as unit_name, now() as create_time
+		from (
+			select user_info.dept_id, count(1) as "接件数"
+			from op_entity left join user_info on op_entity.register_user_id = user_info.user_id
+			where op_entity.key_num_gather IS NOT NULL
+			AND cast(to_char(op_entity.create_time, 'YYYY' ) as integer) = #{year}
+			GROUP BY user_info.dept_id
+			ORDER BY "接件数" desc limit 5
+	   ) a left join user_dept b on a.dept_id = b.dept_id
+
+	</select>
+
+	<select id="statisZican" resultType="com.hnup.osmp.jiance.repository.entity.driver.DriverStoreZican">
+		select count(1) as certificate_quantity, sum(unit_natural_total_area) as register_area, 3 as type,
+			   #{year} as year, 1 as unit, '长沙市自然资源和规划局' as unit_name, now() as create_time
+		from reg_nr_registration_unit u
+				 left join reg_nr_notebook n on u.registration_unit_code = n.registration_unit_code
+		where stage = '07' AND cast(to_char(enrol_date, 'YYYY' ) as integer) = #{year}
+	</select>
+
+	<select id="statisZhifa" resultType="com.hnup.osmp.jiance.repository.entity.driver.DriverStoreZhifa">
+		SELECT
+			(CASE
+			    WHEN
+			        form_name = 'jc_count_countrynaturalresourcesWTZG'
+					or
+			        form_name = 'jc_count_provincenaturalresourcesWTZG' THEN 1
+				WHEN
+				    form_name = 'jc_count_yueqingthreeplacesYJQD'
+				    or
+				    form_name = 'jc_count_yueqingthreeplacesWFYD'
+				    or
+				    form_name = 'jc_count_yueqingthreeplacesXZTD' THEN 2
+				ELSE 0 END
+			) as type,
+			(CASE
+				 WHEN
+					 form_name = 'jc_count_countrynaturalresourcesWTZG'
+					 or
+					 form_name = 'jc_count_yueqingthreeplacesYJQD' THEN 1
+				 WHEN
+					 form_name = 'jc_count_provincenaturalresourcesWTZG'
+					 or
+					 form_name = 'jc_count_yueqingthreeplacesWFYD' THEN 2
+				 WHEN form_name = 'jc_count_yueqingthreeplacesXZTD' THEN 3
+				 ELSE 0 END
+				) as sub_type,
+		       all_tasks as total_task_quantity, finish_state as finish_task_quantity, replace(finish_scale, '%', '') as finish_rate,
+				#{year} as year, 1 as unit, '长沙市自然资源和规划局' as unit_name, now() as create_time
+		FROM jc_count_detail
+		where form_name in ('jc_count_countrynaturalresourcesWTZG',
+		                    'jc_count_provincenaturalresourcesWTZG',
+		                    'jc_count_yueqingthreeplacesYJQD',
+		                    'jc_count_yueqingthreeplacesWFYD',
+		                    'jc_count_yueqingthreeplacesXZTD')
+		and cast(to_char(to_date(data_count_time, 'YYYY' ), 'YYYY') as integer) = #{year} order by type, sub_type
+	</select>
+</mapper>

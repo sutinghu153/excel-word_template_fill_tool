@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.SupFarmlandProtectionMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcFarmlandProtection">
+            <result column="farmland_protection_id" property="farmlandProtectionId" />
+	        <result column="indicative_name" property="indicativeName" />
+	        <result column="examination_content" property="examinationContent" />
+	        <result column="inspection_points" property="inspectionPoints" />
+	        <result column="duty_office" property="dutyOffice" />
+	        <result column="sub_office_leader" property="subOfficeLeader" />
+	        <result column="duty_office_depart" property="dutyOfficeDepart" />
+	        <result column="match_office_depart" property="matchOfficeDepart" />
+	        <result column="assessperformance" property="assessperformance" />
+	        <result column="percentage" property="percentage" />
+	        <result column="update_time" property="updateTime" />
+	        <result column="sup_num" property="supNum" />
+	        <result column="sup_id" property="supId" />
+	        <result column="create_user" property="createUser" />
+	        <result column="create_time" property="createTime" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.farmland_protection_id,
+         t1.indicative_name,
+         t1.examination_content,
+         t1.inspection_points,
+         t1.duty_office,
+         t1.sub_office_leader,
+         t1.duty_office_depart,
+         t1.match_office_depart,
+         t1.assessperformance,
+         t1.percentage,
+         t1.update_time,
+         t1.sup_num,
+         t1.sup_id,
+         t1.create_user,
+         t1.create_time,
+        </sql> 
+
+</mapper>

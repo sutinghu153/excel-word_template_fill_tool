@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.JcHistoricWordsMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcHistoricWords">
+            <result column="id" property="id" />
+	        <result column="create_time" property="createTime" />
+	        <result column="update_time" property="updateTime" />
+	        <result column="word_name" property="wordName" />
+	        <result column="word_data" property="wordData" />
+	        <result column="template_id" property="templateId" />
+	        <result column="year" property="year" />
+	        <result column="month" property="month" />
+	        <result column="day" property="day" />
+			<result column="file_type" property="fileType" />
+		</resultMap>
+
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.id,
+         t1.create_time,
+         t1.update_time,
+         t1.word_name,
+         t1.word_data,
+         t1.template_id,
+         t1.year,
+         t1.month,
+         t1.day,
+        </sql> 
+
+</mapper>

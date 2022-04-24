@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.census.HomeCensusColumnsDataMapper">
+
+	<!--统计公文数据-->
+	<select id="statisDoc" resultType="java.util.Map">
+		select
+			coalesce(sum(case when doc_entity.op_state = 5 then 1 else 0 end), 0) as "办理",
+			coalesce(sum(case when doc_entity.op_state = 5 and doc_entity_bpm.light_flag = 3 then 1 else 0 end), 0) as "超期"
+		from doc_entity left join doc_entity_bpm
+		    on doc_entity.key_dig_num_gather = doc_entity_bpm.key_dig_num_gather
+		<where>
+			<if test="cycle != null">
+				<choose>
+					<when test="cycle == 1">
+						AND date_trunc('WEEK', doc_entity.finish_time) = date_trunc('WEEK', current_timestamp)
+					</when>
+					<when test="cycle == 2">
+						AND date_trunc('MONTH', doc_entity.finish_time) = date_trunc('MONTH', current_timestamp)
+					</when>
+					<when test="cycle == 3">
+						AND date_trunc('QUARTER', doc_entity.finish_time) = date_trunc('QUARTER', current_timestamp)
+					</when>
+					<when test="cycle == 4">
+						AND date_trunc('YEAR', doc_entity.finish_time) = date_trunc('YEAR', current_timestamp)
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+
+	<!--统计OP数据-->
+	<select id="statisOp" resultType="java.util.Map">
+		select
+			coalesce(sum(case when op_entity.op_state = 5 then 1 else 0 end), 0) as "办理",
+			coalesce(sum(case when op_entity.op_state = 5 and op_entity_bpm.light_flag = 3 then 1 else 0 end), 0) as "超期"
+		from op_entity left join op_entity_bpm
+			on op_entity.key_dig_num_gather = op_entity_bpm.key_dig_num_gather
+		<where>
+			<if test="cycle != null">
+				<choose>
+					<when test="cycle == 1">
+						AND date_trunc('WEEK', op_entity.finish_time) = date_trunc('WEEK', current_timestamp)
+					</when>
+					<when test="cycle == 2">
+						AND date_trunc('MONTH', op_entity.finish_time) = date_trunc('MONTH', current_timestamp)
+					</when>
+					<when test="cycle == 3">
+						AND date_trunc('QUARTER', op_entity.finish_time) = date_trunc('QUARTER', current_timestamp)
+					</when>
+					<when test="cycle == 4">
+						AND date_trunc('YEAR', op_entity.finish_time) = date_trunc('YEAR', current_timestamp)
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+
+	<!--统计会议数据-->
+	<select id="statisMeeting" resultType="java.util.Map">
+		SELECT coalesce(sum(case when applicant_type = 0 and state = 1 and start_time <![CDATA[ < ]]> NOW() then 1 else 0 end), 0) as "办理",
+				coalesce(sum(case when state != 1 then 1 else 0 end), 0) as "超期"
+		FROM meeting
+		<where>
+			<if test="cycle != null">
+				<choose>
+					<when test="cycle == 1">
+						AND date_trunc('WEEK', start_time) = date_trunc('WEEK', current_timestamp)
+					</when>
+					<when test="cycle == 2">
+						AND date_trunc('MONTH', start_time) = date_trunc('MONTH', current_timestamp)
+					</when>
+					<when test="cycle == 3">
+						AND date_trunc('QUARTER', start_time) = date_trunc('QUARTER', current_timestamp)
+					</when>
+					<when test="cycle == 4">
+						AND date_trunc('YEAR', start_time) = date_trunc('YEAR', current_timestamp)
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+
+	<!--统计督办数据-->
+	<select id="statisSupervise" resultType="java.util.Map">
+		SELECT
+			coalesce(sum(case when T.del = 'n' and T1.status = 0 then 1 else 0 end), 0) as "办理",
+			coalesce(sum(case when T.del = 'n' and T1.status = 0 and T.handle_time > T.end_time then 1 else 0 end),0) as "超期"
+		FROM
+			supervise T,
+			supervise_process_log T1
+		WHERE
+			T.ID = T1.sup_id
+		<if test="cycle != null">
+			<choose>
+				<when test="cycle == 1">
+					AND date_trunc('WEEK', T.end_time) = date_trunc('WEEK', current_timestamp)
+				</when>
+				<when test="cycle == 2">
+					AND date_trunc('MONTH', T.end_time) = date_trunc('MONTH', current_timestamp)
+				</when>
+				<when test="cycle == 3">
+					AND date_trunc('QUARTER', T.end_time) = date_trunc('QUARTER', current_timestamp)
+				</when>
+				<when test="cycle == 4">
+					AND date_trunc('YEAR', T.end_time) = date_trunc('YEAR', current_timestamp)
+				</when>
+			</choose>
+		</if>
+	</select>
+
+	<!--统计建设用地审批数据:tz->3247-->
+	<select id="statisJsydsp" resultType="java.util.Map">
+		select coalesce(sum(to_number(fld_10552_22, '9999999999999999999.99')), 0) as "公顷", 0.0 as "百分比" from form_data_10552
+		<where>
+			<if test="cycle != null">
+				<choose>
+					<when test="cycle == 1">
+						AND date_trunc('WEEK', fld_10552_26) = date_trunc('WEEK', current_timestamp)
+					</when>
+					<when test="cycle == 2">
+						AND date_trunc('MONTH', fld_10552_26) = date_trunc('MONTH', current_timestamp)
+					</when>
+					<when test="cycle == 3">
+						AND date_trunc('QUARTER', fld_10552_26) = date_trunc('QUARTER', current_timestamp)
+					</when>
+					<when test="cycle == 4">
+						AND date_trunc('YEAR', fld_10552_26) = date_trunc('YEAR', current_timestamp)
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+
+	<!--统计规划许可办理数据:tz->3253-->
+	<select id="statisGhxkbl" resultType="java.util.Map">
+		select coalesce(count(1), 0) as "个", coalesce(sum(fld_10570_14), 0) as "万㎡", 0.0 as "百分比" from form_data_10570
+		<where>
+			fld_10570_7 = #{type}
+			<if test="cycle != null">
+				<choose>
+					<when test="cycle == 1">
+						AND date_trunc('WEEK', fld_10570_17) = date_trunc('WEEK', current_timestamp)
+					</when>
+					<when test="cycle == 2">
+						AND date_trunc('MONTH', fld_10570_17) = date_trunc('MONTH', current_timestamp)
+					</when>
+					<when test="cycle == 3">
+						AND date_trunc('QUARTER', fld_10570_17) = date_trunc('QUARTER', current_timestamp)
+					</when>
+					<when test="cycle == 4">
+						AND date_trunc('YEAR', fld_10570_17) = date_trunc('YEAR', current_timestamp)
+					</when>
+				</choose>
+			</if>
+		</where>
+		GROUP BY fld_10570_7
+	</select>
+
+</mapper>

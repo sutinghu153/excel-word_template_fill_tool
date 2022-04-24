@@ -1,0 +1,699 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.JcOpEvaluateEndMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcOpEvaluateEnd">
+            <result column="key_dig_num_gather" property="keyDigNumGather" />
+	        <result column="key_type_code" property="keyTypeCode" />
+	        <result column="window_service" property="windowService" />
+	        <result column="window_service_note" property="windowServiceNote" />
+	        <result column="op_service" property="opService" />
+	        <result column="op_service_note" property="opServiceNote" />
+	        <result column="kance" property="kance" />
+	        <result column="kance_note" property="kanceNote" />
+	        <result column="info_center" property="infoCenter" />
+	        <result column="info_center_note" property="infoCenterNote" />
+	        <result column="opinion" property="opinion" />
+	        <result column="evaluate_time" property="evaluateTime" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.key_dig_num_gather,
+         t1.key_type_code,main_hand_phase
+         t1.window_service,
+         t1.window_service_note,
+         t1.op_service,
+         t1.op_service_note,
+         t1.kance,
+         t1.kance_note,
+         t1.info_center,
+         t1.info_center_note,
+         t1.opinion,
+         t1.evaluate_time,
+        </sql>
+	<select id="getTableDetails" resultType="java.util.Map">
+	   ${sql}
+	</select>
+
+	<select id="getJcOpEvaluateEndList" resultType="com.hnup.osmp.jiance.repository.entity.JcOpEvaluateEnd">
+		select aa.* from jc_op_evaluate_End aa
+		inner join op_entity bb  on aa.key_dig_num_gather=bb.key_dig_num_gather
+		where bb.op_state in(5)
+	</select>
+
+
+	<select id="getEvaluationSum" resultType="java.lang.Integer">
+		select count(1) from op_entity aa
+		inner join jc_op_evaluate_End bb on aa.key_dig_num_gather=bb.key_dig_num_gather where  aa.finish_time between  #{startTime} and #{endTime} and aa.finish_time is not null
+		and aa.op_state in(5) and aa.key_type_code in(select key_type_code from jc_op_evaluate_config where out_license_phase is not null)
+	</select>
+
+	<select id="getEvaluateSum" resultType="java.lang.Integer">
+		select count(1) from op_entity aa
+		inner join jc_op_evaluate_End bb on aa.key_dig_num_gather=bb.key_dig_num_gather
+		where aa.finish_time between  #{startTime} and #{endTime}  and aa.finish_time is not null
+		and aa.op_state in(5) and aa.key_type_code in(select key_type_code from jc_op_evaluate_config where out_license_phase is not null)
+	</select>
+
+	<select id="getBadEvaluateSum" resultType="java.lang.Integer">
+		select count(1) from op_entity aa
+		inner join jc_op_evaluate_End bb on aa.key_dig_num_gather=bb.key_dig_num_gather
+		where aa.finish_time between  #{startTime} and #{endTime} and aa.finish_time is not null
+		and aa.op_state in(5) and (bb.window_service in(-1,1) or bb.op_service in (-1,1)) and aa.key_type_code in(select key_type_code from jc_op_evaluate_config where out_license_phase is not null)
+	</select>
+
+	<select id="getGoodEvaluateSum" resultType="java.lang.Integer">
+		select count(1) from op_entity aa
+		inner join jc_op_evaluate_End bb on aa.key_dig_num_gather=bb.key_dig_num_gather
+		where aa.finish_time between  #{startTime} and #{endTime}  and aa.finish_time is not null
+		and aa.op_state in(5) and bb.window_service in(3,4) and bb.op_service in (3,4) and bb.kance not in (-1,1,2)  and bb.info_Center not in (-1,1,2)
+		and aa.key_type_code in(select key_type_code from jc_op_evaluate_config where out_license_phase is not null)
+	</select>
+
+
+	<select id="getMonthlyEvaluationGlobalView" resultType="com.hnup.osmp.jiance.model.dto.MonthlyEvaluationGlobalViewVO" >
+		select * from   (
+		select t2.key_dig_num_gather keydignumgather,t4.op_type_name optypename,t3.finish_time finishtime,t1.prj_name prjname,t1.prj_company prjcompany,
+			  (
+					select user_name from user_info where user_id in
+					(
+						select  cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+						inner join op_entity  bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+						where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1
+					)
+				) as handusername,
+			  (
+	        select dept_name from user_dept where dept_id in
+					(
+						select dept_id  from user_info  where user_id in
+						(
+							select  cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+							inner join op_entity  bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+							where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1
+						)
+					)
+				)  as handdepartname,
+		t3.key_num_gather keynumgather,
+		t1.prj_id prjid
+			 from jc_op_evaluate_end t2
+			 inner join op_entity t3 on t2.key_dig_num_gather=t3.key_dig_num_gather
+			 inner join op t4 on t3.key_type_code=t4.key_type_code
+		     inner join jc_op_evaluate_config t5 on t5.key_type_code=t3.key_type_code
+	    	left join op_public_field_data_cache t1 on t1.key_dig_num_gather=t2.key_dig_num_gather
+
+			 where  t3.op_state IN (5) AND t3.finish_time IS NOT NULL and t5.out_license_phase is not null
+		and t3.finish_time between  #{startTime} and #{endTime}
+		<if test='keyWord!=null and  keyWord !="" '>
+			and (t3.key_num_gather like concat('%',#{keyWord},'%') or t1.prj_id like concat('%',#{keyWord},'%') or t1.prj_name like concat('%',#{keyWord},'%'))
+		</if>
+		) tt
+		<if test='sortField!=null and  sortField !="" '>
+			order by #{sortField} #{sortOrder}
+		</if>
+		<if test='sortField==null || sortField =="" '>
+			order by prjid
+		</if>
+	</select>
+
+	<select id="getMonthlyEvaluationItemView" resultType="java.util.Map" >
+		select * from (
+		select t2.key_dig_num_gather keydignumgather,
+		t3.key_type_code keytypecode,
+		t4.op_type_name optypename,
+		t3.finish_time finishtime,
+		t1.prj_name prjname,
+		t1.prj_company prjcompany,
+		(
+		SELECT
+		user_name
+		FROM
+		user_info
+		WHERE
+		user_id IN (
+		SELECT CAST
+		( aa.action_user_id AS INTEGER )
+		FROM
+		BPM_DATA_WORK_RECORD aa
+		INNER JOIN op_entity bb ON aa.PROC_INS_ID = bb.PROC_INS_ID
+		WHERE
+		bb.key_dig_num_gather = t1.key_dig_num_gather
+		ORDER BY
+		aa.action_date
+		LIMIT 1
+		)
+		) AS handusername,
+		(
+		SELECT
+		dept_name
+		FROM
+		user_dept
+		WHERE
+		dept_id IN (
+		SELECT
+		dept_id
+		FROM
+		user_info
+		WHERE
+		user_id IN (
+		SELECT CAST
+		( aa.action_user_id AS INTEGER )
+		FROM
+		BPM_DATA_WORK_RECORD aa
+		INNER JOIN op_entity bb ON aa.PROC_INS_ID = bb.PROC_INS_ID
+		WHERE
+		bb.key_dig_num_gather = t1.key_dig_num_gather
+		ORDER BY
+		aa.action_date
+		LIMIT 1
+		)
+		)
+		) AS handdepartname,
+		t2.opinion,
+		t3.key_num_gather keynumgather,
+		t1.prj_id prjid
+		FROM jc_op_evaluate_end t2
+		INNER JOIN op_entity t3 ON t2.key_dig_num_gather = t3.key_dig_num_gather
+		INNER JOIN op t4 ON t3.key_type_code = t4.key_type_code
+		inner join jc_op_evaluate_config t5 on t5.key_type_code=t3.key_type_code
+		left join op_public_field_data_cache t1 on t1.key_dig_num_gather=t2.key_dig_num_gather
+		WHERE
+		t3.op_state IN (5) and t5.out_license_phase is not null
+		AND t3.finish_time IS NOT NULL
+		and t3.finish_time between #{startTime} and #{endTime}
+		<if test='keyWord!=null and  keyWord !="" '>
+			and (t3.key_num_gather like concat('%',#{keyWord},'%') or t1.prj_id like concat('%',#{keyWord},'%') or
+			t1.prj_name like concat('%',#{keyWord},'%') or t2.opinion like concat('%',#{keyWord},'%') )
+		</if>
+		<if test='itemType==1'>and t2.window_service in(3,4) and t2.op_service in (3,4) and t2.kance not in (-1,1,2) and
+			t2.info_center not in (-1,1,2)
+		</if>
+		<if test='itemType==2'>
+			and (t2.window_service in(-1,1) or t2.op_service in (-1,1) )
+		</if>
+		) tt
+		<if test='sortField!=null and  sortField !="" '>
+			order by #{sortField} #{sortOrder}
+		</if>
+		<if test='sortField==null || sortField =="" '>
+			order by prjid
+		</if>
+
+	</select>
+
+	<select id="getDepartEvaluateMonthly" resultType="com.hnup.osmp.jiance.model.dto.MonthlyDepartEvaluateItemVO">
+		select qq.dept_id flowPhDepartCode,ww.dept_name departName,qq.EndOpCount endOpCount,qq.SumEvaluteCount sumEvaluteCount, qq.SumBadEvaluteCount sumBadEvaluteCount,
+		(
+		CASE WHEN qq.EndOpCount is null THEN 0
+		WHEN qq.EndOpCount =0  THEN 0 else
+	    CAST(CAST(qq.SumBadEvaluteCount as numeric)/CAST(qq.EndOpCount as numeric)*100.00 as DECIMAL(18,2)) END) as  evalutePercent
+		from (
+		select dept_id,sum(1) AS EndOpCount,sum(IsEvaluate) AS SumEvaluteCount,sum(BadEvaluate) AS SumBadEvaluteCount from (
+		select
+		(
+		select dept_id from user_info where user_id in
+		(
+		select  cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		where aa.PROC_INS_ID = t1.PROC_INS_ID and aa.target_task_def_key=t3.main_hand_phase order by aa.action_date limit 1
+		)
+		) as dept_id,
+		(SELECT COUNT(1) FROM jc_op_evaluate_end aa WHERE  aa.key_dig_num_gather = t1.key_dig_num_gather) IsEvaluate,
+		(SELECT COUNT(1) FROM jc_op_evaluate_end bb WHERE bb.key_dig_num_gather = t1.key_dig_num_gather and   (window_service in(-1,1) or op_service in (-1,1) ) )  BadEvaluate
+		from op_entity t1
+		LEFT join jc_op_evaluate_end t2 on t1.key_dig_num_gather=t2.key_dig_num_gather
+		inner join jc_op_evaluate_config t3 on t3.key_type_code=t1.key_type_code
+		where t3.out_license_phase is not null and t1.op_state in(5) and t1.finish_time between  #{startTime} and #{endTime} and t1.finish_time is not null
+		)tt GROUP BY tt.dept_id
+		) qq
+		LEFT JOIN user_dept ww ON qq.dept_id=ww.dept_id and ww.del_flag='0' and ww.status='0'
+		ORDER BY ww.order_num
+	</select>
+
+	<select  id="getMonthlyDepartEvaluateItemView"  resultType="com.hnup.osmp.jiance.model.dto.MonthlyDepartEvaluateItemViewVO">
+		select * from (
+		select t2.key_dig_num_gather keydignumgather,t3.finish_time finishtime,t1.prj_name prjname,t1.prj_company
+		prjcompany,t4.main_hand_phase handusernum,
+		(
+		select user_name from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1
+		)
+		) as username,
+
+		(
+		select user_name from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather and aa.target_task_def_key=t4.main_hand_phase order by aa.action_date
+		limit 1
+		)
+		) as handusername,
+		(
+		select dept_name from user_dept where dept_id in
+		(
+		select dept_id from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather and aa.target_task_def_key=t4.main_hand_phase order by aa.action_date
+		limit 1
+		)
+		)
+		) as handdepartname,
+		( select dept_id from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather and aa.target_task_def_key=t4.main_hand_phase order by aa.action_date
+		limit 1
+		)) as flowphdepartcode,
+		t2.opinion,
+		t3.key_num_gather keynumgather,
+		t1.prj_id prjid,
+		t2.window_service_note windowservicenote,
+		t2.op_service_note opservicenote
+
+		from  jc_op_evaluate_end t2
+		inner join op_entity t3 on t2.key_dig_num_gather=t3.key_dig_num_gather
+		inner join jc_op_evaluate_config t4 on t3.key_type_code=t4.key_type_code
+		left join op_public_field_data_cache t1 on t1.key_dig_num_gather=t2.key_dig_num_gather
+		where t3.op_state IN (5) AND t3.finish_time IS NOT NULL
+		and t3.finish_time between #{startTime} and #{endTime}
+		and t4.out_license_phase is not null
+		<if test='keyWord!=null and  keyWord !="" '>
+			and (t2.opinion like concat('%',#{keyWord},'%') or t3.key_num_gather like concat('%',#{keyWord},'%') or
+			t1.prj_id like concat('%',#{keyWord},'%') or t1.prj_name like concat('%',#{keyWord},'%') )
+		</if>
+		<if test='signUserDepart==-1 and itemType==2'>
+			and (t2.window_service in(1,-1) or t2.op_service in (-1,1))
+		</if>
+		<if test='signUserDepart==0 and itemType==2'>
+			and t2.op_service in (-1,1)
+		</if>
+		<if test='signUserDepart==1 and itemType==2'>
+			and t2.window_service in(1,-1)
+		</if>
+
+		) t1 where 1=1
+		<if test='departCode>0'>
+			and flowphdepartcode=#{departCode}
+		</if>
+		<if test='userName!=null and  userName !=""'>
+			and handusername=#{userName}
+		</if>
+
+		<if test='sortField!=null and  sortField !="" '>
+			order by #{sortField} #{sortOrder}
+		</if>
+		<if test='sortField==null || sortField =="" '>
+			order by prjid
+		</if>
+
+	</select>
+
+	<select id="getUserEvaluateStatistic" resultType="java.util.Map" >
+	select count(1) endOpCount,COALESCE(sum(IsEvaluate),0) isEvaluate,COALESCE(sum(BadEvaluate),0) badEvaluate from (
+	select 	(
+		select user_name from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1
+		)
+		) as username,
+
+		(
+		select user_name from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather and aa.target_task_def_key=t2.main_hand_phase order by aa.action_date
+		limit 1
+		)
+		) as handusername,
+			( select dept_id from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather and aa.target_task_def_key=t2.main_hand_phase order by aa.action_date
+		limit 1
+		)) as flowphdepartcode,
+		(select  1 from jc_op_evaluate_end aa where  aa.key_dig_num_gather=t1.key_dig_num_gather limit 1) IsEvaluate,
+		(select  1 from jc_op_evaluate_end aa where  aa.key_dig_num_gather=t1.key_dig_num_gather
+		<if test='signUserDepart==0 '>
+			and  aa.op_service in (-1,1)
+		</if>
+		<if test='signUserDepart==1'>
+			and aa.window_service in(1,-1)
+		</if>
+
+		limit 1
+		)  BadEvaluate
+	   from op_entity t1
+		inner join jc_op_evaluate_config t2 on t2.key_type_code=t1.key_type_code
+		where t2.out_license_phase is not null and t1.op_state in(5)   and t1.finish_time is not null
+		and t1.finish_time between #{startTime} and #{endTime}
+		) temp where  flowphdepartcode is not null and handusername=#{userName}
+
+	</select>
+
+	<select id="getMonitorGridView" resultType="com.hnup.osmp.jiance.model.dto.MonitorGridViewVO" >
+
+		select * from(
+		select t2.key_dig_num_gather keydignumgather,t3.key_num_gather keynumgather,t3.finish_time
+		finishtime,COALESCE(t1.prj_name,'') prjname,COALESCE(t1.prj_company,'') prjcompany,
+		COALESCE((
+		select user_name from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1
+		)
+		),'') as HandUserName,
+		COALESCE((
+		select dept_name from user_dept where dept_id in
+		(
+		select dept_id from user_info where user_id in
+		(
+		select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1
+		)
+		)
+		),'') as HandDepartName,
+		(CASE WHEN (t2.window_service_note IS NULL or t2.window_service_note='') THEN '' else
+		'窗口:'||t2.window_service_note||';' END)||
+		(CASE WHEN (t2.op_service_note IS NULL or t2.op_service_note='') THEN '' else '审批:'||t2.op_service_note||';'
+		END)||
+		(CASE WHEN (t2.kance_note IS NULL or t2.kance_note='') THEN '' else '勘测院:'||t2.kance_note||';' END)||
+		(CASE WHEN (t2.info_center_note IS NULL or t2.info_center_note='') THEN '' else
+		'信息中心:'||t2.info_center_note||';' END)||
+		(CASE WHEN (t2.opinion IS NULL or t2.opinion='') THEN '' ELSE '全局:'||t2.opinion||';' END) AS opinion,
+		t4.op_type_name optypename,
+		(case  when t2.window_service=-1  then '非常不满意'
+		when t2.window_service=1  then '不满意'
+		when t2.window_service=2  then '一般'
+		when t2.window_service=3  then '较满意'
+		when t2.window_service=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.window_service=1 THEN ','||t2.window_service_note ELSE '' end) windowandnote,
+
+		(case  when t2.op_service=-1  then '非常不满意'
+		when t2.op_service=1  then '不满意'
+		when t2.op_service=2  then '一般'
+		when t2.op_service=3  then '较满意'
+		when t2.op_service=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.op_service=1 THEN ','||t2.op_service_note ELSE '' end) opservicandnote,
+
+		(case  when t2.kance=-1  then '非常不满意'
+		when t2.kance=1  then '不满意'
+		when t2.kance=2  then '一般'
+		when t2.kance=3  then '较满意'
+		when t2.kance=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.kance=1 THEN ','||t2.kance_note ELSE '' end) kanceandnote,
+
+		(case  when t2.info_center=-1  then '非常不满意'
+		when t2.info_center=1  then '不满意'
+		when t2.info_center=2  then '一般'
+		when t2.info_center=3  then '较满意'
+		when t2.info_center=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.info_center=1 THEN ','||t2.info_center_note ELSE '' end) infocenterandnote
+		from  jc_op_evaluate_end t2
+		inner join op_entity t3 on t2.key_dig_num_gather=t3.key_dig_num_gather
+		inner join op t4 on t4.key_type_code=t3.key_type_code
+		left join op_public_field_data_cache t1 on t1.key_dig_num_gather=t2.key_dig_num_gather
+		where 1=1 and t3.op_state in(5)
+		<if test='keyWord!=null and  keyWord !="" '>
+			and (t2.opinion like concat('%',#{keyWord},'%') or t3.key_num_gather like concat('%',#{keyWord},'%') or
+			t1.prj_name like concat('%',#{keyWord},'%') or t1.prj_company like concat('%',#{keyWord},'%') )
+		</if>
+		<if test='evaluateDepartType==1'>
+			and t2.window_service=#{satisfactionLevel}
+		</if>
+		<if test='evaluateDepartType==2'>
+			and t2.op_service=#{satisfactionLevel}
+		</if>
+		<if test='evaluateDepartType==3'>
+			and t2.kance=#{satisfactionLevel}
+		</if>
+		<if test='evaluateDepartType==4'>
+			and t2.info_center=#{satisfactionLevel}
+		</if>
+		<if test='prjname!=null and  prjname !=""'>
+			and t1.prj_name like concat('%',#{prjname},'%')
+		</if>
+		<if test='keynumgather!=null and  keynumgather !=""'>
+			and t3.key_num_gather like concat('%',#{keynumgather},'%')
+		</if>
+		<if test='startTime!=null and  startTime !=""'>
+			and t3.finish_time>=#{startTime}
+		</if>
+		<if test='endTime!=null and  endTime !=""'>
+			and t3.finish_time &lt;= #{endTime}
+		</if>
+		) TT
+		<if test='sortField!=null and  sortField !="" '>
+			order by #{sortField} #{sortOrder}
+		</if>
+		<if test='sortField==null || sortField =="" '>
+			order by finishtime desc
+		</if>
+
+	</select>
+
+	<select id="getMonitorItemView" resultType="com.hnup.osmp.jiance.model.dto.MonitorItemViewVO">
+		select t2.key_dig_num_gather keydignumgather,
+		(case  when t2.window_service=-1  then '非常不满意'
+		when t2.window_service=1  then '不满意'
+		when t2.window_service=2  then '一般'
+		when t2.window_service=3  then '较满意'
+		when t2.window_service=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.window_service=1 THEN ','||t2.window_service_note ELSE '' end) windowandnote,
+
+		(case  when t2.op_service=-1  then '非常不满意'
+		when t2.op_service=1  then '不满意'
+		when t2.op_service=2  then '一般'
+		when t2.op_service=3  then '较满意'
+		when t2.op_service=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.op_service=1 THEN ','||t2.op_service_note ELSE '' end) opservicandnote,
+
+		(case  when t2.kance=-1  then '非常不满意'
+		when t2.kance=1  then '不满意'
+		when t2.kance=2  then '一般'
+		when t2.kance=3  then '较满意'
+		when t2.kance=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.kance=1 THEN ','||t2.kance_note ELSE '' end) kanceandnote,
+
+		(case  when t2.info_center=-1  then '非常不满意'
+		when t2.info_center=1  then '不满意'
+		when t2.info_center=2  then '一般'
+		when t2.info_center=3  then '较满意'
+		when t2.info_center=4  then '非常满意'
+		ELSE  '' end || CASE WHEN t2.info_center=1 THEN ','||t2.info_center_note ELSE '' end) infocenterandnote,
+		COALESCE(t2.opinion,'') opinion,t3.key_num_gather keynumgather,t3.op_state opstate,t3.finish_time finishtime,COALESCE(t1.prj_id,'') prjid,COALESCE(t1.prj_name,'')  prjname,COALESCE(t1.prj_company,'')  prjcompany,op.op_type_name optypename
+		from  jc_op_evaluate_end t2
+		inner join op_entity t3 on t2.key_dig_num_gather=t3.key_dig_num_gather
+		inner join op on op.key_type_code=t3.key_type_code
+		left join op_public_field_data_cache t1 on t1.key_dig_num_gather=t2.key_dig_num_gather
+		<if test='keyWord!=null and  keyWord !="" '>
+			where (t2.opinion like concat('%',#{keyWord},'%') or t3.key_num_gather like concat('%',#{keyWord},'%') or
+			t1.prj_id like concat('%',#{keyWord},'%') or t1.prj_name like concat('%',#{keyWord},'%') )
+		</if>
+
+
+	</select>
+
+
+	<select id="getUnEvaluateOps" resultType="com.hnup.osmp.jiance.model.dto.UnEvaluateOpsVO">
+		SELECT
+		t1.key_dig_num_gather keydignumgather,
+		t1.key_num_gather keynumgather,
+		t1.finish_time finishtime,
+		t3.op_type_name optypename,
+		COALESCE(t4.prj_id,'') prjid,
+		COALESCE(t4.prj_name,'') prjname,
+		COALESCE(t4.prj_company,'') prjcompany,
+		COALESCE(t4.apply_user_name,'') applyusername,
+		COALESCE(t4.apply_user_tel,'') applyusertel, EXTRACT(epoch FROM age(now(), t1.finish_time ) )/86400 AS hasfinishdays
+		FROM
+		op_entity t1
+		INNER JOIN jc_op_evaluate_config t2 ON t1.key_type_code = t2.key_type_code
+		INNER JOIN op t3 ON t2.key_type_code = t3.key_type_code
+		left JOIN op_public_field_data_cache t4 ON t1.key_dig_num_gather = t4.key_dig_num_gather
+		WHERE
+		t2.out_license_phase IS NOT NULL
+		AND t1.create_time > '2008-09-29 15:58:00'
+		AND t1.op_state IN ( 5 )
+		AND t1.finish_time IS NOT NULL
+		AND t1.key_dig_num_gather NOT IN ( SELECT key_dig_num_gather FROM jc_op_evaluate_end )
+		<if test='keyWord!=null and  keyWord !="" '>
+			and (t1.key_num_gather like concat('%',#{keyWord},'%') or t4.prj_id like concat('%',#{keyWord},'%') or
+			t4.prj_name like concat('%',#{keyWord},'%') or t4.prj_company like concat('%',#{keyWord},'%') )
+		</if>
+	</select>
+
+	<select id="getMonitorItemWorkingView" resultType="com.hnup.osmp.jiance.model.dto.MonitorItemWorkingViewVO">
+		SELECT
+		t1.key_dig_num_gather keydignumgather,
+		t1.opinion,
+		t2.key_num_gather keynumgather,
+		t3.op_type_name optypename,
+		COALESCE(t4.prj_id,'') prjid,
+		COALESCE(t4.prj_name,'')  prjname
+		FROM
+		jc_op_evaluate_working t1
+		INNER JOIN op_entity t2 ON t1.key_dig_num_gather = t2.key_dig_num_gather
+		INNER JOIN op t3 ON t1.key_type_code = t3.key_type_code
+		left JOIN op_public_field_data_cache t4 ON t4.key_dig_num_gather = t2.key_dig_num_gather
+		<if test='keyWord!=null and  keyWord !="" '>
+			where (t1.opinion like concat('%',#{keyWord},'%') or t2.key_num_gather like concat('%',#{keyWord},'%') or
+			t4.prj_id like concat('%',#{keyWord},'%') or t4.prj_name like concat('%',#{keyWord},'%') )
+		</if>
+	</select>
+
+	<select id="getDepartEvaluatePercent" resultType="com.hnup.osmp.jiance.model.dto.DepartEvaluatePercentVO">
+		select aa.*, 0.0 evalutepercent,bb.dept_name deptname from (
+		select flowphdepartcode,sum(1) endopcount,sum(isevaluate) sumevalutecount from (
+		select t1.key_dig_num_gather,
+				( select dept_id from user_info where user_id in
+				(
+				select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+				inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+				where bb.key_dig_num_gather=t1.key_dig_num_gather and aa.target_task_def_key=t2.main_hand_phase order by aa.action_date
+				limit 1
+				)) as flowphdepartcode,
+			(select  count(1) from jc_op_evaluate_end aa where  aa.key_dig_num_gather=t1.key_dig_num_gather ) isevaluate
+		from op_entity t1
+		inner join jc_op_evaluate_config t2 on t1.key_type_code=t2.key_type_code
+		where t2.out_license_phase is not null
+		and t1.create_time>'2008-09-29 15:58:00'
+				and t1.op_state IN (5) AND t1.finish_time IS NOT NULL
+				) tem  where tem.flowphdepartcode is NOT null group by tem.flowphdepartcode
+		) aa
+		left join user_dept bb on aa.flowphdepartcode=bb.dept_id
+
+
+	</select>
+
+
+	<select id="getPersonGoodDegreeEvaluate" resultType="java.util.Map">
+
+select user_dept.dept_name deptname,user_info.user_name username,tem.* from (
+	select
+			flowphusernum,
+																	SUM(1) AS EndOpCount,
+																	SUM(CASE WHEN tb.op_service=4 THEN 1 ELSE 0 end) AS gooddegree4,
+																	SUM(CASE WHEN tb.op_service=3 THEN 1 ELSE 0 end) AS gooddegree3,
+																	SUM(CASE WHEN tb.op_service=2 THEN 1 ELSE 0 end) AS gooddegree2,
+																	SUM(CASE WHEN tb.op_service=1 THEN 1 ELSE 0 end) AS gooddegree1,
+																	SUM(CASE WHEN (tb.opinion IS NOT NULL AND tb.opinion!='') THEN 1 ELSE 0 end) AS opinioncount
+	from(
+	select t1.key_dig_num_gather,t3.op_service,t3.opinion,
+		(select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+			inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+			where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1) flowphusernum
+	from op_entity t1
+	inner join jc_op_evaluate_config t2 on t1.key_type_code=t2.key_type_code
+	inner join jc_op_evaluate_end t3 on t1.key_dig_num_gather=t3.key_dig_num_gather
+	where t2.out_license_phase is not null and
+	 t1.create_time>'2008-09-29 15:58:00'
+			and t1.op_state IN (5) AND t1.finish_time IS NOT NULL
+	) tb where tb.flowphusernum is not null GROUP BY tb.flowphusernum
+) tem
+LEFT JOIN user_info ON user_info.user_id = tem.flowphusernum
+ LEFT JOIN user_dept ON user_dept.dept_id = user_info.dept_id  ORDER BY user_dept.order_num,user_info.order_num
+	</select>
+
+	<select id="getPersonDetailOps" resultType="com.hnup.osmp.jiance.model.dto.PersonDetailOpsVO">
+		select
+		tt.key_dig_num_gather keydignumgather,
+		tt.create_time createtime,
+		tt.key_num_gather keynumgather,
+		op.op_type_name optypename,
+		tt.flowphusernum,
+		t4.user_name username,
+		t5.dept_id deptid,
+		t5.dept_name deptname,
+		COALESCE(t3.op_service,0) opservice,
+
+		(case  when t3.op_service=-1  then '非常不满意'
+		when t3.op_service=1  then '不满意'
+		when t3.op_service=2  then '一般'
+		when t3.op_service=3  then '较满意'
+		when t3.op_service=4  then '非常满意'
+		ELSE  '未评价' end) goodname,
+		COALESCE(t3.opinion,'') opinion,
+		COALESCE( t6.prj_id,'') prjid,
+		COALESCE(t6.prj_name,'') prjname,
+		COALESCE(t6.prj_company,'') prjcompany
+		from (
+		select t1.key_type_code,t1.key_dig_num_gather,t1.create_time,t1.key_num_gather,
+		(select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1) flowphusernum
+		from op_entity t1
+		inner join jc_op_evaluate_config t2 on t1.key_type_code=t2.key_type_code
+		where t2.out_license_phase is not null and
+		t1.create_time>'2008-09-29 15:58:00' and t1.op_state IN (5)
+		AND t1.finish_time IS NOT NULL
+		) tt
+		left join jc_op_evaluate_end t3 on tt.key_dig_num_gather=t3.key_dig_num_gather
+		left join op on op.key_type_code=tt.key_type_code
+		left join user_info t4 on t4.user_id=tt.flowphusernum
+		left join user_dept t5 on t4.dept_id=t5.dept_id
+		left join op_public_field_data_cache t6 on tt.key_dig_num_gather=t6.key_dig_num_gather
+		where tt.flowphusernum is not null
+		<if test='keyWord!=null and  keyWord !="" '>
+			and (tt.key_num_gather like concat('%',#{keyWord},'%') or t4.user_name like concat('%',#{keyWord},'%') or
+			t5.dept_name like concat('%',#{keyWord},'%') or t3.opinion like concat('%',#{keyWord},'%') or
+			t6.prj_id like concat('%',#{keyWord},'%') or t6.prj_name like concat('%',#{keyWord},'%') or t6.prj_company like concat('%',#{keyWord},'%') )
+		</if>
+	</select>
+	<select id="exportPersonDetailOps" resultType="com.hnup.osmp.jiance.model.dto.PersonDetailVO">
+		select
+		tt.key_dig_num_gather keydignumgather,
+		tt.create_time createtime,
+		tt.key_num_gather keynumgather,
+		op.op_type_name optypename,
+		tt.flowphusernum,
+		t4.user_name username,
+		t5.dept_id deptid,
+		t5.dept_name deptname,
+		COALESCE(t3.op_service,0) opservice,
+
+		(case  when t3.op_service=-1  then '非常不满意'
+		when t3.op_service=1  then '不满意'
+		when t3.op_service=2  then '一般'
+		when t3.op_service=3  then '较满意'
+		when t3.op_service=4  then '非常满意'
+		ELSE  '未评价' end) goodname,
+		COALESCE(t3.opinion,'') opinion,
+		COALESCE( t6.prj_id,'') prjid,
+		COALESCE(t6.prj_name,'') prjname,
+		COALESCE(t6.prj_company,'') prjcompany
+		from (
+		select t1.key_type_code,t1.key_dig_num_gather,t1.create_time,t1.key_num_gather,
+		(select cast(aa.action_user_id as integer ) from BPM_DATA_WORK_RECORD aa
+		inner join op_entity bb on aa.PROC_INS_ID = bb.PROC_INS_ID
+		where bb.key_dig_num_gather=t1.key_dig_num_gather order by aa.action_date limit 1) flowphusernum
+		from op_entity t1
+		inner join jc_op_evaluate_config t2 on t1.key_type_code=t2.key_type_code
+		where t2.out_license_phase is not null and
+		t1.create_time>'2008-09-29 15:58:00' and t1.op_state IN (5)
+		AND t1.finish_time IS NOT NULL
+		) tt
+		left join jc_op_evaluate_end t3 on tt.key_dig_num_gather=t3.key_dig_num_gather
+		left join op on op.key_type_code=tt.key_type_code
+		left join user_info t4 on t4.user_id=tt.flowphusernum
+		left join user_dept t5 on t4.dept_id=t5.dept_id
+		left join op_public_field_data_cache t6 on tt.key_dig_num_gather=t6.key_dig_num_gather
+		where tt.flowphusernum is not null
+		<if test='keyWord!=null and  keyWord !="" '>
+			and (tt.key_num_gather like concat('%',#{keyWord},'%') or t4.user_name like concat('%',#{keyWord},'%') or
+			t5.dept_name like concat('%',#{keyWord},'%') or t3.opinion like concat('%',#{keyWord},'%') or
+			t6.prj_id like concat('%',#{keyWord},'%') or t6.prj_name like concat('%',#{keyWord},'%') or t6.prj_company like concat('%',#{keyWord},'%') )
+		</if>
+	</select>
+
+</mapper>

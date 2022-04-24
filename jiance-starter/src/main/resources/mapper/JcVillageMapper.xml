@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE  mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnup.osmp.jiance.repository.mapper.SupVillageMapper">
+	<resultMap id="BaseResultMap" type="com.hnup.osmp.jiance.repository.entity.JcVillage">
+            <result column="village_id" property="villageId" />
+	        <result column="village_name" property="villageName" />
+	        <result column="village_parent" property="villageParent" />
+	        <result column="parent_name" property="parentName" />
+	        <result column="create_time" property="createTime" />
+	        <result column="update_time" property="updateTime" />
+		</resultMap>  
+    
+    <!-- 表字段 -->
+    <sql id="BaseColumns">
+         t1.village_id,
+         t1.village_name,
+         t1.village_parent,
+         t1.parent_name,
+         t1.create_time,
+         t1.update_time,
+        </sql> 
+
+</mapper>
